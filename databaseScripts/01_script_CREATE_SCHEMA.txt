@@ -1,0 +1,162 @@
+--#############
+--# Paulo Trigo
+--# OCT.2016
+--#############
+
+
+--==============
+-- DB connection
+--==============
+\set dataBase OftalClinic
+;
+\set userName postgres
+;
+\connect :dataBase :userName
+;
+--==========================
+--==========================
+
+
+-------------------------------
+-- create the relational schema
+-------------------------------
+DROP TABLE IF EXISTS Visits;
+DROP TABLE IF EXISTS Doctors;
+DROP TABLE IF EXISTS Patients;
+DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS Permissions;
+
+DROP TABLE IF EXISTS Age;
+DROP TABLE IF EXISTS Prescription;
+DROP TABLE IF EXISTS Astigmatic;
+DROP TABLE IF EXISTS Tear_rate;
+DROP TABLE IF EXISTS Lense_type;
+--------------------------------
+
+
+CREATE TABLE Users(
+user_id INT NOT NULL,
+email VARCHAR NOT NULL,
+password VARCHAR NOT NULL,
+salt VARCHAR NOT NULL,
+permissions INT DEFAULT 0
+);
+
+CREATE TABLE Permissions(
+perm_id INT NOT NULL,
+name VARCHAR NOT NULL
+);
+
+CREATE TABLE Doctors(
+doctor_id INT NOT NULL,
+name VARCHAR NOT NULL
+);
+
+CREATE TABLE Patients(
+patient_id INT NOT NULL,
+name VARCHAR NOT NULL
+);
+
+CREATE TABLE Visits(
+visit_id INT NOT NULL,
+visit_date DATE NOT NULL
+);
+
+CREATE TABLE Age(
+age_id INT NOT NULL,
+name VARCHAR
+);
+
+CREATE TABLE Prescription(
+prescription_id INT NOT NULL,
+name VARCHAR
+);
+
+CREATE TABLE Astigmatic(
+astigmatic_id INT NOT NULL,
+name VARCHAR
+);
+
+CREATE TABLE Tear_rate(
+tear_rate_id INT NOT NULL,
+name VARCHAR
+);
+
+CREATE TABLE Lense_type(
+lense_type_id INT NOT NULL,
+name VARCHAR
+);
+
+----------------------------
+-- relationship attributes
+----------------------------
+
+-- Doctors -> Users
+ALTER TABLE Doctors
+ADD user_id INT DEFAULT -1
+;
+
+-- Patients -> Users, Age, Prescription etc...
+ALTER TABLE Patients
+ADD user_id INT NOT NULL DEFAULT -1,
+ADD age_id INT NOT NULL DEFAULT -1,
+ADD prescription_id INT NOT NULL DEFAULT -1,
+ADD astigmatic_id INT NOT NULL DEFAULT -1,
+ADD tear_rate_id INT NOT NULL DEFAULT -1
+;
+
+-- Visits -> Doctors, Patients
+ALTER TABLE Visits
+ADD patient_id INT NOT NULL DEFAULT -1,
+ADD doctor_id INT NOT NULL DEFAULT -1
+;
+
+
+-------------------------------
+-- entity integrity constraints
+-- (primary key and unique)
+-------------------------------
+
+ALTER TABLE Users			ADD CONSTRAINT pk_Users    		PRIMARY KEY( user_id );
+ALTER TABLE Permissions		ADD CONSTRAINT pk_Permissions	PRIMARY KEY( perm_id );
+ALTER TABLE Doctors			ADD CONSTRAINT pk_Doctors	    PRIMARY KEY( doctor_id );
+ALTER TABLE Patients		ADD CONSTRAINT pk_Patients	    PRIMARY KEY( patient_id );
+ALTER TABLE Visits			ADD CONSTRAINT pk_Visits	    PRIMARY KEY( visit_id );
+ALTER TABLE Age 			ADD CONSTRAINT pk_Age 			PRIMARY KEY( age_id );
+ALTER TABLE Prescription 	ADD CONSTRAINT pk_Prescription 	PRIMARY KEY( prescription_id );
+ALTER TABLE Astigmatic 		ADD CONSTRAINT pk_Astigmatic	PRIMARY KEY( astigmatic_id );
+ALTER TABLE Tear_rate 		ADD CONSTRAINT pk_Tear_rate		PRIMARY KEY( tear_rate_id );
+ALTER TABLE Lense_type 		ADD CONSTRAINT pk_Lense_type	PRIMARY KEY( lense_type_id );
+
+
+----------------------------------------
+-- referential integrity constraints
+-- (foreign key)
+----------------------------------------
+
+ALTER TABLE Doctors ADD CONSTRAINT fk1_Doctors
+    FOREIGN KEY( user_id ) REFERENCES Users( user_id )
+;
+
+ALTER TABLE Patients ADD CONSTRAINT fk1_Patients
+    FOREIGN KEY( user_id ) REFERENCES Users( user_id )
+;
+
+ALTER TABLE Patients ADD CONSTRAINT fk2_Patients
+    FOREIGN KEY( age_id ) REFERENCES Age( age_id ),
+	ADD CONSTRAINT fk3_Patients
+	FOREIGN KEY( prescription_id ) REFERENCES Prescription( prescription_id ),
+	ADD CONSTRAINT fk4_Patients
+    FOREIGN KEY( astigmatic_id ) REFERENCES Astigmatic( astigmatic_id ),
+	ADD CONSTRAINT fk5_Patients
+    FOREIGN KEY( tear_rate_id ) REFERENCES Tear_rate( tear_rate_id )
+;
+
+ALTER TABLE Visits ADD CONSTRAINT fk1_Visits
+    FOREIGN KEY( doctor_id ) REFERENCES Doctors( doctor_id )
+;
+
+ALTER TABLE Visits ADD CONSTRAINT fk2_Visits
+    FOREIGN KEY( patient_id ) REFERENCES Patients( patient_id )
+;
+
